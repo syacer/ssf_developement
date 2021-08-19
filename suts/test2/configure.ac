@@ -1,0 +1,8 @@
+AC_INIT([test], [1.0])
+AM_INIT_AUTOMAKE
+AC_PROG_RANLIB
+AC_LANG(C)
+AC_SUBST([CC])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[int main() {return 0;}]])])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

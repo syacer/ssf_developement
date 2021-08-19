@@ -1,0 +1,269 @@
+/************************************************************************
+ * (with blocking)
+ * 1. Receiver creates a fifo
+ * 2. Sender open the fifo. If fifo does not exist,
+ *    sender is blocked in open function until fifo is created
+ * 3. Receiver opens the fifo. Receiver is blocked in open() until 
+ *    sender opens the fifo.
+ * 4. Sender writes data into fifo
+ * 5. Receiver waits in read until sender finishes sending data in fifo.
+ * ***********************************************************************/
+
+#include "sjyfifo.h"
+
+
+static int queueheadOut = 0;
+static int queuetailOut = 0;
+static int queueheadIn  = 0;
+static int queuetailIn  = 0;
+static int isClient = -1;
+static int setupReady = 0;
+static char msgqueueout[MSG_QUEUE_SIZE][MAX_BUF_SIZE];
+static char msgqueuein[MSG_QUEUE_SIZE][MAX_BUF_SIZE];
+static pthread_mutex_t lock;
+static int terminate;
+
+void enqueue(char* str, int type) {
+  
+  pthread_mutex_lock(&lock);
+  
+  char (*queueSel)[MAX_BUF_SIZE] = type == OUTQ ? msgqueueout : msgqueuein;
+  int* qheadSel = type == OUTQ ? &queueheadOut : &queueheadIn; 
+  int* qtailSel = type == OUTQ ? &queuetailOut : &queuetailIn; 
+  
+  if ((*qtailSel + 1) % MSG_QUEUE_SIZE == *qheadSel) {
+    ACTF("Message Queue full! Discard this message\n");
+    strncpy(str, "$@full@$", MAX_BUF_SIZE);
+  } else {
+    *qtailSel = (*qtailSel + 1) % MSG_QUEUE_SIZE;
+    strncpy(queueSel[*qtailSel], str, MAX_BUF_SIZE);
+  }
+  pthread_mutex_unlock(&lock);
+}
+
+void dequeue(char* str, int type) {
+
+  pthread_mutex_lock(&lock);
+  
+  char (*queueSel)[MAX_BUF_SIZE] = type == OUTQ ? msgqueueout : msgqueuein;
+  int* qheadSel = type == OUTQ ? &queueheadOut : &queueheadIn; 
+  int* qtailSel = type == OUTQ ? &queuetailOut : &queuetailIn; 
+  
+  if (*qheadSel % MSG_QUEUE_SIZE == *qtailSel) {
+    ACTF("Message Queue is empty, nothing to retrive \n");
+    strncpy(str, "$@empty@$", MAX_BUF_SIZE);
+  }
+  else {
+    *qheadSel = (*qheadSel + 1) % MSG_QUEUE_SIZE;
+    if (str == NULL) {
+      ABORT("unallocated pointer subject to copy operation \n");
+    }
+    strncpy(str, queueSel[*qheadSel], MAX_BUF_SIZE);
+  }
+  pthread_mutex_unlock(&lock);
+}
+
+void setfifoType(int myType) {
+  isClient = myType;
+}
+
+void removefifo() {
+
+  if (isClient) {
+    SAYF("client fifo removed \n");
+    close(FIFO_CLIENT);
+    unlink(FIFO_CLIENT);
+  }
+  else {
+    SAYF("server fifo removed \n");
+    close(FIFO_SERVER);
+    unlink(FIFO_SERVER);
+  }
+}
+
+
+void* sendcore(void* args) {
+  
+  int fd;
+  char filePath[30];
+  char msg[MAX_BUF_SIZE];
+
+  if(isClient) {strcpy(filePath, FIFO_SERVER);}
+  else {strcpy(filePath, FIFO_CLIENT);}
+  
+  while (1) {
+
+    dequeue(msg, OUTQ);
+    if (strstr(msg, "$@empty@$")) {
+      continue;
+    }
+
+    fd = open(filePath, O_WRONLY);
+    if (fd < 0) {
+      terminate = 1;
+      ABORT("can't open FIFO file \n");
+    }
+      
+    int ret = write(fd, msg, MAX_BUF_SIZE);
+    if (ret == -1) {
+      terminate = 1;
+      ABORT("Write to fifo failure \n");
+    }
+    close(fd);
+  }
+}
+
+void* recvcore(void* args) {
+  
+  int fd;
+  char filePath[30];
+  char msg[MAX_BUF_SIZE];
+
+  if(isClient) {strcpy(filePath, FIFO_SERVER);}
+  else {strcpy(filePath, FIFO_CLIENT);}
+  
+  while (1) {
+
+    fd = open(filePath, O_WRONLY);
+    if (fd < 0) {
+      terminate = 1;
+      ABORT("can't open FIFO file \n");
+    }
+      
+    int ret = read(fd, msg, MAX_BUF_SIZE);
+    if (ret == -1) {
+      terminate = 1;
+      ABORT("Read from fifo failed\n");
+
+    }
+
+    enqueue(msg,INQ);
+
+    close(fd);
+  }
+}
+
+int sendnbytes(char* buf, int n) {
+  
+  if (n > MAX_BUF_SIZE)  return SETUP_FAIL;
+  
+  if (terminate == 1) ABORT("FIFO is broken, abort now \n");
+  char msg[MAX_BUF_SIZE];
+  strncpy(msg, buf, n);
+  enqueue(msg, OUTQ);
+  
+  if (strstr(msg, "$@full@$")) {
+    return BUF_FULL;
+  }
+  return 0;
+}
+
+int recvnbytes(char* buf, int n) {
+
+  char msg[MAX_BUF_SIZE];
+
+  
+  if (terminate == 1) ABORT("FIFO is broken, abort now \n");
+  
+  if (n > MAX_BUF_SIZE || !buf) {
+    return SETUP_FAIL;
+  }
+  
+  dequeue(msg, INQ);
+
+  if (strstr(msg, "$@empty@$")) {
+    return BUF_EMPTY;
+  }
+  
+  strncpy(buf, msg, n);
+
+  return 0;
+}
+
+void setupCommunication() {
+  
+  if (isClient == -1) {
+   SAYF("Please indicate fifo type, client or server\n");
+  }
+  
+  char filePath[30];
+
+  if(isClient) {
+    strcpy(filePath, FIFO_CLIENT);
+  }
+  else {strcpy(filePath, FIFO_SERVER);} 
+  
+  unlink(filePath);
+  if (mkfifo(filePath, 0777) < 0) {
+    ABORT("make fifo failed \n");
+  }
+
+  struct sigevent sevp;
+  timer_t timerid;
+  timer_create(CLOCK_REAL_TIME, &sevp, &timerid);
+  setupReady = 1;
+}
+
+int passargvtoclient(char** argv, int argc) {
+ 
+  // first data: argc 4 bytes
+  // second data: argv0  256 bytes
+  // .....
+  
+  char tmpArgStr[MAX_BUF_SIZE];
+  int ret;
+  char phonybyte = 'a';
+  if (!setupReady ||  !argv) return -1;
+  
+  if (isClient) {
+    
+    ret = recvnbytes(tmpArgStr, MAX_BUF_SIZE/32);
+    if (ret < 0) {
+      BADF("recvnbytes returns %d \n", ret);
+      return -1;
+    }
+    // convert string argc to int argc
+
+    int argc = atoi(tmpArgStr);
+    if (argc < 1 || argc > MAX_BUF_SIZE) {
+      BADF("invalid tmpArgStr %s\n", tmpArgStr);
+      return -1;
+    }
+    
+    sendnbytes(&phonybyte, 1);
+
+    // get argv
+    int cnt = 0;
+    while (cnt < argc) {
+      ret = recvnbytes(argv[cnt], MAX_BUF_SIZE);
+      sendnbytes(&phonybyte, 1);
+      if (ret < 0) {
+        BADF("recvnbytes returns %d \n", ret);
+        return -1;
+      }
+      cnt++;
+    }
+    
+  }
+  else {
+    
+    sprintf(tmpArgStr,"%d", argc);
+    ret = sendnbytes(tmpArgStr, MAX_BUF_SIZE/32);
+    if (ret < 0) {
+      BADF("sendnbytes returns %d \n", ret);
+      return -1;
+    }
+    recvnbytes(&phonybyte, 1);
+    //send argv
+    for (int i = 0; i < argc; i++) {
+    
+      ret = sendnbytes(argv[i], MAX_BUF_SIZE);
+      recvnbytes(&phonybyte,1);
+      if (ret < 0) {
+        BADF("sendnbytes returns %d \n", ret);
+        return -1;
+      }
+    }
+  }
+  return 0;
+}

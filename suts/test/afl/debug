@@ -1,0 +1,27 @@
+initializeServer(), analyzer_rti.cpp:347 Test Binary Info: LOGNAME=ubuntu ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:351 ececv ret: -1
+initializeServer(), analyzer_rti.cpp:354 execv error: No such file or directory 
+initializeServer(), analyzer_rti.cpp:354 Test Binary Info: LOGNAME=ubuntu ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:358 ececv ret: -1
+initializeServer(), analyzer_rti.cpp:361 execv error: No such file or directory 
+initializeServer(), analyzer_rti.cpp:354 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+setup(), analyzer_rti.cpp:42 CCC test_analyzer_inst 
+setup(), analyzer_rti.cpp:44 CCC test_analyzer_inst 
+initializeServer(), analyzer_rti.cpp:356 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+setup(), analyzer_rti.cpp:42 AAA test_analyzer_inst 
+setup(), analyzer_rti.cpp:47 CCC test_analyzer_inst 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst ../../../AFL-master/afl-fuzz -i 
+initializeServer(), analyzer_rti.cpp:352 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:350 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:351 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:351 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:351 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:347 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:355 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:355 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:355 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 
+initializeServer(), analyzer_rti.cpp:355 Test Binary Info: test_analyzer_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/test_afl_inst /home/ubuntu/research/sjyfuzz/suts/test/afl/findings_dir/.cur_input 

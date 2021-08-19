@@ -1,0 +1,48 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <errno.h>
+#include <error.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
+#include <debug.h>
+#include <time.h>
+#include <pthread.h>
+
+#ifdef C_PROJ
+ #define EXTERN extern "C"
+#else
+ #define EXTERN
+#endif
+
+#ifdef FIFO_LOC
+    #define FIFO_CLIENT FIFO_LOC"sjy_client.fifo"
+    #define FIFO_SERVER FIFO_LOC"sjy_server.fifo"
+#else
+    #define FIFO_CLIENT "sjy_client.fifo"
+    #define FIFO_SERVER "sjy_server.fifo"
+#endif
+
+
+#define MAX_ALLOWED_TIME 1800
+#define MAX_BUF_SIZE 256
+#define I_AM_CLIENT 1
+#define I_AM_SERVER 0
+#define SETUP_FAIL -1
+#define BUF_FULL   -2
+#define BUF_EMPTY  -3
+#define MSG_QUEUE_SIZE 1024
+#define OUTQ 0
+#define INQ 1
+
+EXTERN  void removefifo();
+EXTERN  void setfifoType(int);
+EXTERN  void setupCommunication();
+EXTERN  int recvnbytes(char*, int);
+EXTERN  int sendnbytes(char*, int);
+EXTERN  int passargvtoclient(char** , int);
